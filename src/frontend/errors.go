@@ -14,7 +14,7 @@ func serviceError(code codes.Code, errCode pb.ErrorCode, msg, originService stri
 		OriginService: originService,
 	})
 	if err != nil {
-		return status.Errorf(code, msg)
+		return status.Error(code, msg)
 	}
 	return st.Err()
 }

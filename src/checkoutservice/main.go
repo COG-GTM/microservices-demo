@@ -251,7 +251,7 @@ func (cs *checkoutService) PlaceOrder(ctx context.Context, req *pb.PlaceOrderReq
 
 	txID, err := cs.chargeCard(ctx, &total, req.CreditCard)
 	if err != nil {
-		return nil, serviceError(codes.Unavailable, pb.ErrorCode_PAYMENT_FAILED, fmt.Sprintf("failed to charge card: %+v", err), "checkoutservice")
+		return nil, serviceError(codes.Internal, pb.ErrorCode_PAYMENT_FAILED, fmt.Sprintf("failed to charge card: %+v", err), "checkoutservice")
 	}
 	log.Infof("payment went through (transaction_id: %s)", txID)
 
