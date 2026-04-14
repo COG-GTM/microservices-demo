@@ -119,7 +119,7 @@ public final class AdService {
       } catch (StatusRuntimeException e) {
         logger.log(Level.WARN, "GetAds Failed with status {}", e.getStatus());
         ServiceError serviceError = ServiceError.newBuilder()
-            .setErrorCode(ErrorCode.INTERNAL)
+            .setErrorCode(ErrorCode.ERROR_CODE_UNSPECIFIED)
             .setMessage("Failed to retrieve ads: " + e.getMessage())
             .setOriginService("adservice")
             .build();
