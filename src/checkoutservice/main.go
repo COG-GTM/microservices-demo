@@ -237,7 +237,7 @@ func (cs *checkoutService) PlaceOrder(ctx context.Context, req *pb.PlaceOrderReq
 
 	prep, err := cs.prepareOrderItemsAndShippingQuoteFromCart(ctx, req.UserId, req.UserCurrency, req.Address)
 	if err != nil {
-		return nil, status.Errorf(codes.Internal, err.Error())
+		return nil, serviceError(codes.Unavailable, pb.ErrorCode_DOWNSTREAM_SERVICE_UNAVAILABLE, err.Error(), "checkoutservice")
 	}
 
 	total := pb.Money{CurrencyCode: req.UserCurrency,
@@ -251,13 +251,13 @@ func (cs *checkoutService) PlaceOrder(ctx context.Context, req *pb.PlaceOrderReq
 
 	txID, err := cs.chargeCard(ctx, &total, req.CreditCard)
 	if err != nil {
-		return nil, status.Errorf(codes.Internal, "failed to charge card: %+v", err)
+		return nil, serviceError(codes.Unavailable, pb.ErrorCode_PAYMENT_FAILED, fmt.Sprintf("failed to charge card: %+v", err), "checkoutservice")
 	}
 	log.Infof("payment went through (transaction_id: %s)", txID)
 
 	shippingTrackingID, err := cs.shipOrder(ctx, req.Address, prep.cartItems)
 	if err != nil {
-		return nil, status.Errorf(codes.Unavailable, "shipping error: %+v", err)
+		return nil, serviceError(codes.Unavailable, pb.ErrorCode_SHIPPING_FAILED, fmt.Sprintf("shipping error: %+v", err), "checkoutservice")
 	}
 
 	_ = cs.emptyUserCart(ctx, req.UserId)

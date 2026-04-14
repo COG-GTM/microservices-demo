@@ -19,13 +19,18 @@ package hipstershop;
 import com.google.common.collect.ImmutableListMultimap;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
+import com.google.protobuf.Any;
+import com.google.rpc.Status;
 import hipstershop.Demo.Ad;
 import hipstershop.Demo.AdRequest;
 import hipstershop.Demo.AdResponse;
+import hipstershop.Demo.ErrorCode;
+import hipstershop.Demo.ServiceError;
 import io.grpc.Server;
 import io.grpc.ServerBuilder;
 import io.grpc.StatusRuntimeException;
 import io.grpc.health.v1.HealthCheckResponse.ServingStatus;
+import io.grpc.protobuf.StatusProto;
 import io.grpc.services.*;
 import io.grpc.stub.StreamObserver;
 import java.io.IOException;
@@ -113,7 +118,17 @@ public final class AdService {
         responseObserver.onCompleted();
       } catch (StatusRuntimeException e) {
         logger.log(Level.WARN, "GetAds Failed with status {}", e.getStatus());
-        responseObserver.onError(e);
+        ServiceError serviceError = ServiceError.newBuilder()
+            .setErrorCode(ErrorCode.INTERNAL)
+            .setMessage("Failed to retrieve ads: " + e.getMessage())
+            .setOriginService("adservice")
+            .build();
+        Status rpcStatus = Status.newBuilder()
+            .setCode(io.grpc.Status.Code.INTERNAL.value())
+            .setMessage("Failed to retrieve ads: " + e.getMessage())
+            .addDetails(Any.pack(serviceError))
+            .build();
+        responseObserver.onError(StatusProto.toStatusRuntimeException(rpcStatus));
       }
     }
   }

@@ -95,8 +95,7 @@ namespace cartservice.cartstore
         }
         catch (Exception ex)
         {   
-            throw new RpcException(
-                new Status(StatusCode.FailedPrecondition, $"Unable to access cart storage due to an internal error. {ex}"));
+            throw ServiceErrorHelper.CreateServiceError(StatusCode.Unavailable, Hipstershop.ErrorCode.StorageUnavailable, $"Unable to access cart storage due to an internal error. {ex}", "cartservice");
         }
     }
 
@@ -131,8 +130,7 @@ namespace cartservice.cartstore
             }
             catch (Exception ex)
             {
-                throw new RpcException(
-                    new Status(StatusCode.FailedPrecondition, $"Unable to access cart storage due to an internal error. {ex}"));
+                throw ServiceErrorHelper.CreateServiceError(StatusCode.Unavailable, Hipstershop.ErrorCode.StorageUnavailable, $"Unable to access cart storage due to an internal error. {ex}", "cartservice");
             }
             return cart;
         }
@@ -156,8 +154,7 @@ namespace cartservice.cartstore
             }
             catch (Exception ex)
             {
-                throw new RpcException(
-                    new Status(StatusCode.FailedPrecondition, $"Unable to access cart storage due to an internal error. {ex}"));
+                throw ServiceErrorHelper.CreateServiceError(StatusCode.Unavailable, Hipstershop.ErrorCode.StorageUnavailable, $"Unable to access cart storage due to an internal error. {ex}", "cartservice");
             }
         }
 
