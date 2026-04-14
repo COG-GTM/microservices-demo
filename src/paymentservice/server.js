@@ -17,6 +17,7 @@ const grpc = require('@grpc/grpc-js');
 const protoLoader = require('@grpc/proto-loader');
 
 const charge = require('./charge');
+const { createServiceError, ErrorCode } = require('./grpc_error_helper');
 
 const logger = require('./logger')
 
@@ -45,7 +46,19 @@ class HipsterShopServer {
       callback(null, response);
     } catch (err) {
       console.warn(err);
-      callback(err);
+
+      // Map CreditCardError subclasses to structured error codes
+      let errorCode = ErrorCode.PAYMENT_FAILED;
+      if (err.constructor && err.constructor.name === 'InvalidCreditCard') {
+        errorCode = ErrorCode.INVALID_CREDIT_CARD;
+      } else if (err.constructor && err.constructor.name === 'UnacceptedCreditCard') {
+        errorCode = ErrorCode.UNACCEPTED_CREDIT_CARD;
+      } else if (err.constructor && err.constructor.name === 'ExpiredCreditCard') {
+        errorCode = ErrorCode.EXPIRED_CREDIT_CARD;
+      }
+
+      const grpcCode = (err.code === 400) ? grpc.status.INVALID_ARGUMENT : grpc.status.INTERNAL;
+      callback(createServiceError(grpcCode, errorCode, err.message, 'paymentservice'));
     }
   }
 

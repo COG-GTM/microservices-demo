@@ -35,6 +35,8 @@ import (
 	pb "github.com/GoogleCloudPlatform/microservices-demo/src/frontend/genproto"
 	"github.com/GoogleCloudPlatform/microservices-demo/src/frontend/money"
 	"github.com/GoogleCloudPlatform/microservices-demo/src/frontend/validator"
+
+	"google.golang.org/grpc/status"
 )
 
 type platformDetails struct {
@@ -537,6 +539,20 @@ func renderHTTPError(log logrus.FieldLogger, r *http.Request, w http.ResponseWri
 	log.WithField("error", err).Error("request error")
 	errMsg := fmt.Sprintf("%+v", err)
 
+	// Try to extract ServiceError details from gRPC status
+	if st, ok := status.FromError(err); ok {
+		for _, detail := range st.Details() {
+			if se, ok := detail.(*pb.ServiceError); ok {
+				code = mapErrorCodeToHTTPStatus(se.ErrorCode)
+				errMsg = se.Message
+				log.WithField("error_code", se.ErrorCode.String()).
+					WithField("origin_service", se.OriginService).
+					Error("structured service error")
+				break
+			}
+		}
+	}
+
 	w.WriteHeader(code)
 
 	if templateErr := templates.ExecuteTemplate(w, "error", injectCommonTemplateData(r, map[string]interface{}{
@@ -545,6 +561,25 @@ func renderHTTPError(log logrus.FieldLogger, r *http.Request, w http.ResponseWri
 		"status":      http.StatusText(code),
 	})); templateErr != nil {
 		log.Println(templateErr)
+	}
+}
+
+func mapErrorCodeToHTTPStatus(code pb.ErrorCode) int {
+	switch code {
+	case pb.ErrorCode_PRODUCT_NOT_FOUND, pb.ErrorCode_CART_NOT_FOUND:
+		return http.StatusNotFound
+	case pb.ErrorCode_INVALID_CREDIT_CARD, pb.ErrorCode_EXPIRED_CREDIT_CARD,
+		pb.ErrorCode_UNACCEPTED_CREDIT_CARD, pb.ErrorCode_INVALID_CURRENCY,
+		pb.ErrorCode_INVALID_REQUEST:
+		return http.StatusBadRequest
+	case pb.ErrorCode_STORAGE_UNAVAILABLE, pb.ErrorCode_DOWNSTREAM_SERVICE_UNAVAILABLE:
+		return http.StatusServiceUnavailable
+	case pb.ErrorCode_PAYMENT_FAILED:
+		return http.StatusPaymentRequired
+	case pb.ErrorCode_SHIPPING_FAILED, pb.ErrorCode_EMAIL_DELIVERY_FAILED:
+		return http.StatusInternalServerError
+	default:
+		return http.StatusInternalServerError
 	}
 }
 

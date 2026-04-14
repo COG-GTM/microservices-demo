@@ -76,6 +76,7 @@ else {
 const path = require('path');
 const grpc = require('@grpc/grpc-js');
 const protoLoader = require('@grpc/proto-loader');
+const { createServiceError, ErrorCode } = require('./grpc_error_helper');
 
 const MAIN_PROTO_PATH = path.join(__dirname, './proto/demo.proto');
 const HEALTH_PROTO_PATH = path.join(__dirname, './proto/grpc/health/v1/health.proto');
@@ -140,8 +141,30 @@ function convert (call, callback) {
     _getCurrencyData((data) => {
       const request = call.request;
 
-      // Convert: from_currency --> EUR
+      // Validate currency codes exist
       const from = request.from;
+      if (!data[from.currency_code]) {
+        logger.error(`unsupported from currency: ${from.currency_code}`);
+        callback(createServiceError(
+          grpc.status.INVALID_ARGUMENT,
+          ErrorCode.INVALID_CURRENCY,
+          `Unsupported currency code: ${from.currency_code}`,
+          'currencyservice'
+        ));
+        return;
+      }
+      if (!data[request.to_code]) {
+        logger.error(`unsupported to currency: ${request.to_code}`);
+        callback(createServiceError(
+          grpc.status.INVALID_ARGUMENT,
+          ErrorCode.INVALID_CURRENCY,
+          `Unsupported currency code: ${request.to_code}`,
+          'currencyservice'
+        ));
+        return;
+      }
+
+      // Convert: from_currency --> EUR
       const euros = _carry({
         units: from.units / data[from.currency_code],
         nanos: from.nanos / data[from.currency_code]
@@ -164,7 +187,12 @@ function convert (call, callback) {
     });
   } catch (err) {
     logger.error(`conversion request failed: ${err}`);
-    callback(err.message);
+    callback(createServiceError(
+      grpc.status.INTERNAL,
+      ErrorCode.ERROR_CODE_UNSPECIFIED,
+      err.message,
+      'currencyservice'
+    ));
   }
 }
 

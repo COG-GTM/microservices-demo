@@ -96,8 +96,7 @@ namespace cartservice.cartstore
             }
             catch (Exception ex)
             {
-                throw new RpcException(
-                    new Status(StatusCode.FailedPrecondition, $"Can't access cart storage at {databaseString}. {ex}"));
+                throw ServiceErrorHelper.CreateServiceError(StatusCode.Unavailable, Hipstershop.ErrorCode.StorageUnavailable, $"Can't access cart storage at {databaseString}. {ex}", "cartservice");
             }
         }
 
@@ -136,8 +135,7 @@ namespace cartservice.cartstore
             }
             catch (Exception ex)
             {
-                throw new RpcException(
-                    new Status(StatusCode.FailedPrecondition, $"Can't access cart storage at {databaseString}. {ex}"));
+                throw ServiceErrorHelper.CreateServiceError(StatusCode.Unavailable, Hipstershop.ErrorCode.StorageUnavailable, $"Can't access cart storage at {databaseString}. {ex}", "cartservice");
             }
         }
 
@@ -164,8 +162,7 @@ namespace cartservice.cartstore
 
             catch (Exception ex)
             {
-                throw new RpcException(
-                    new Status(StatusCode.FailedPrecondition, $"Can't access cart storage at {databaseString}. {ex}"));
+                throw ServiceErrorHelper.CreateServiceError(StatusCode.Unavailable, Hipstershop.ErrorCode.StorageUnavailable, $"Can't access cart storage at {databaseString}. {ex}", "cartservice");
             }
         }
 

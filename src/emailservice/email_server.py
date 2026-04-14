@@ -29,6 +29,7 @@ import demo_pb2
 import demo_pb2_grpc
 from grpc_health.v1 import health_pb2
 from grpc_health.v1 import health_pb2_grpc
+from grpc_error_helper import abort_with_service_error
 
 from opentelemetry import trace
 from opentelemetry.instrumentation.grpc import GrpcInstrumentorServer
@@ -90,17 +91,27 @@ class EmailService(BaseEmailService):
     try:
       confirmation = template.render(order = order)
     except TemplateError as err:
-      context.set_details("An error occurred when preparing the confirmation mail.")
       logger.error(err.message)
-      context.set_code(grpc.StatusCode.INTERNAL)
+      abort_with_service_error(
+        context,
+        grpc.StatusCode.INTERNAL,
+        demo_pb2.EMAIL_DELIVERY_FAILED,
+        "An error occurred when preparing the confirmation mail.",
+        "emailservice",
+      )
       return demo_pb2.Empty()
 
     try:
       EmailService.send_email(self.client, email, confirmation)
     except GoogleAPICallError as err:
-      context.set_details("An error occurred when sending the email.")
-      print(err.message)
-      context.set_code(grpc.StatusCode.INTERNAL)
+      logger.error(err.message)
+      abort_with_service_error(
+        context,
+        grpc.StatusCode.UNAVAILABLE,
+        demo_pb2.EMAIL_DELIVERY_FAILED,
+        "An error occurred when sending the email.",
+        "emailservice",
+      )
       return demo_pb2.Empty()
 
     return demo_pb2.Empty()

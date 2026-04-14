@@ -16,6 +16,7 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"strings"
 	"time"
 
@@ -54,7 +55,7 @@ func (p *productCatalog) GetProduct(ctx context.Context, req *pb.GetProductReque
 		}
 	}
 
-	return nil, status.Errorf(codes.NotFound, "no product with ID %s", req.Id)
+	return nil, serviceError(codes.NotFound, pb.ErrorCode_PRODUCT_NOT_FOUND, fmt.Sprintf("no product with ID %s", req.Id), "productcatalogservice")
 }
 
 func (p *productCatalog) SearchProducts(ctx context.Context, req *pb.SearchProductsRequest) (*pb.SearchProductsResponse, error) {
