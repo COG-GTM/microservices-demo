@@ -16,10 +16,12 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"strings"
 	"time"
 
 	pb "github.com/GoogleCloudPlatform/microservices-demo/src/productcatalogservice/genproto"
+	svcerrors "github.com/GoogleCloudPlatform/microservices-demo/src/productcatalogservice/errors"
 	"google.golang.org/grpc/codes"
 	healthpb "google.golang.org/grpc/health/grpc_health_v1"
 	"google.golang.org/grpc/status"
@@ -54,7 +56,7 @@ func (p *productCatalog) GetProduct(ctx context.Context, req *pb.GetProductReque
 		}
 	}
 
-	return nil, status.Errorf(codes.NotFound, "no product with ID %s", req.Id)
+	return nil, svcerrors.NewServiceError(codes.NotFound, "PRODUCT_NOT_FOUND", fmt.Sprintf("no product with ID %s", req.Id), "productcatalogservice")
 }
 
 func (p *productCatalog) SearchProducts(ctx context.Context, req *pb.SearchProductsRequest) (*pb.SearchProductsResponse, error) {
