@@ -164,7 +164,21 @@ function convert (call, callback) {
     });
   } catch (err) {
     logger.error(`conversion request failed: ${err}`);
-    callback(err.message);
+    const serviceError = {
+      error_code: 'CURRENCY_CONVERSION_FAILED',
+      message: `conversion request failed: ${err.message}`,
+      service: 'currencyservice',
+      field_violations: []
+    };
+    const ServiceErrorType = shopProto.ServiceError;
+    const encodedError = ServiceErrorType.encode(ServiceErrorType.fromObject(serviceError)).finish();
+    const metadata = new grpc.Metadata();
+    metadata.add('grpc-status-details-bin', Buffer.from(encodedError));
+    callback({
+      code: grpc.status.INTERNAL,
+      message: `conversion request failed: ${err.message}`,
+      metadata: metadata
+    });
   }
 }
 
