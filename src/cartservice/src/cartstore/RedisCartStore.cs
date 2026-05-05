@@ -18,6 +18,7 @@ using System.Threading.Tasks;
 using Grpc.Core;
 using Microsoft.Extensions.Caching.Distributed;
 using Google.Protobuf;
+using cartservice.errors;
 
 namespace cartservice.cartstore
 {
@@ -61,7 +62,7 @@ namespace cartservice.cartstore
             }
             catch (Exception ex)
             {
-                throw new RpcException(new Status(StatusCode.FailedPrecondition, $"Can't access cart storage. {ex}"));
+                throw ServiceErrorHelper.Create(StatusCode.Unavailable, "CART_STORAGE_UNAVAILABLE", $"Can't access cart storage. {ex}");
             }
         }
 
@@ -76,7 +77,7 @@ namespace cartservice.cartstore
             }
             catch (Exception ex)
             {
-                throw new RpcException(new Status(StatusCode.FailedPrecondition, $"Can't access cart storage. {ex}"));
+                throw ServiceErrorHelper.Create(StatusCode.Unavailable, "CART_STORAGE_UNAVAILABLE", $"Can't access cart storage. {ex}");
             }
         }
 
@@ -99,7 +100,7 @@ namespace cartservice.cartstore
             }
             catch (Exception ex)
             {
-                throw new RpcException(new Status(StatusCode.FailedPrecondition, $"Can't access cart storage. {ex}"));
+                throw ServiceErrorHelper.Create(StatusCode.Unavailable, "CART_STORAGE_UNAVAILABLE", $"Can't access cart storage. {ex}");
             }
         }
 
