@@ -16,6 +16,19 @@ syntax = "proto3";
 
 package hipstershop;
 
+// Standardized application-level error detail attached to gRPC error responses
+message ServiceError {
+  string error_code = 1;
+  string message = 2;
+  string service = 3;
+  repeated FieldViolation field_violations = 4;
+}
+
+message FieldViolation {
+  string field = 1;
+  string description = 2;
+}
+
 // -----------------Cart service-----------------
 
 service CartService {
