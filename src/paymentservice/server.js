@@ -45,23 +45,13 @@ class HipsterShopServer {
       callback(null, response);
     } catch (err) {
       logger.error(`charge request failed: ${err}`);
-      const errorCode = err.errorCode || 'PAYMENT_FAILED';
-      const hipsterShopPackage = this.packages.hipsterShop.hipstershop;
-      const serviceError = {
-        error_code: errorCode,
-        message: err.message,
-        service: 'paymentservice',
-        field_violations: []
-      };
-      const ServiceErrorType = hipsterShopPackage.ServiceError;
-      const encodedError = ServiceErrorType.encode(ServiceErrorType.fromObject(serviceError)).finish();
-      const metadata = new grpc.Metadata();
-      metadata.add('grpc-status-details-bin', Buffer.from(encodedError));
-      callback({
-        code: grpc.status.INVALID_ARGUMENT,
-        message: err.message,
-        metadata: metadata
-      });
+      const { createServiceError } = require('./error_helper');
+      callback(createServiceError(
+        grpc.status.INVALID_ARGUMENT,
+        err.errorCode || 'PAYMENT_FAILED',
+        err.message,
+        'paymentservice'
+      ));
     }
   }
 

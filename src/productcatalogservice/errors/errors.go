@@ -14,7 +14,7 @@ func NewServiceError(code codes.Code, errCode, msg, svc string) error {
 		Service:   svc,
 	})
 	if err != nil {
-		return status.Errorf(code, msg)
+		return status.Error(code, msg)
 	}
 	return st.Err()
 }

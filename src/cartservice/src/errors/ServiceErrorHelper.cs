@@ -13,6 +13,7 @@
 // limitations under the License.
 
 using Google.Protobuf;
+using Google.Protobuf.WellKnownTypes;
 using Grpc.Core;
 using Hipstershop;
 
@@ -29,9 +30,16 @@ public static class ServiceErrorHelper
             Service = "cartservice"
         };
 
+        var rpcStatus = new Google.Rpc.Status
+        {
+            Code = (int)code,
+            Message = message,
+        };
+        rpcStatus.Details.Add(Any.Pack(serviceError));
+
         var metadata = new Metadata
         {
-            { "grpc-status-details-bin", serviceError.ToByteArray() }
+            { "grpc-status-details-bin", rpcStatus.ToByteArray() }
         };
 
         return new RpcException(new Status(code, message), metadata);
