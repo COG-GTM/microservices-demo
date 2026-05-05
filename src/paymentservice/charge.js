@@ -37,18 +37,21 @@ class CreditCardError extends Error {
 class InvalidCreditCard extends CreditCardError {
   constructor (cardType) {
     super(`Credit card info is invalid`);
+    this.errorCode = 'INVALID_CREDIT_CARD';
   }
 }
 
 class UnacceptedCreditCard extends CreditCardError {
   constructor (cardType) {
     super(`Sorry, we cannot process ${cardType} credit cards. Only VISA or MasterCard is accepted.`);
+    this.errorCode = 'UNACCEPTED_CREDIT_CARD';
   }
 }
 
 class ExpiredCreditCard extends CreditCardError {
   constructor (number, month, year) {
     super(`Your credit card (ending ${number.substr(-4)}) expired on ${month}/${year}`);
+    this.errorCode = 'EXPIRED_CREDIT_CARD';
   }
 }
 

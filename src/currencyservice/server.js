@@ -164,7 +164,13 @@ function convert (call, callback) {
     });
   } catch (err) {
     logger.error(`conversion request failed: ${err}`);
-    callback(err.message);
+    const { createServiceError } = require('./error_helper');
+    callback(createServiceError(
+      grpc.status.INTERNAL,
+      'CURRENCY_CONVERSION_FAILED',
+      `conversion request failed: ${err.message}`,
+      'currencyservice'
+    ));
   }
 }
 

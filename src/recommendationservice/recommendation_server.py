@@ -28,6 +28,7 @@ import grpc
 
 import demo_pb2
 import demo_pb2_grpc
+from error_helper import abort_with_service_error
 from grpc_health.v1 import health_pb2
 from grpc_health.v1 import health_pb2_grpc
 
@@ -70,7 +71,18 @@ class RecommendationService(demo_pb2_grpc.RecommendationServiceServicer):
     def ListRecommendations(self, request, context):
         max_responses = 5
         # fetch list of products from product catalog stub
-        cat_response = product_catalog_stub.ListProducts(demo_pb2.Empty())
+        try:
+            cat_response = product_catalog_stub.ListProducts(demo_pb2.Empty())
+        except grpc.RpcError as err:
+            logger.error(f"Failed to fetch product catalog: {err}")
+            abort_with_service_error(
+                context,
+                grpc.StatusCode.UNAVAILABLE,
+                "CATALOG_FETCH_FAILED",
+                f"Failed to fetch product catalog: {err}",
+                "recommendationservice",
+            )
+            return  # unreachable after abort, but makes intent clear
         product_ids = [x.id for x in cat_response.products]
         filtered_products = list(set(product_ids)-set(request.product_ids))
         num_products = len(filtered_products)

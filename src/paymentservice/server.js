@@ -44,8 +44,14 @@ class HipsterShopServer {
       const response = charge(call.request);
       callback(null, response);
     } catch (err) {
-      console.warn(err);
-      callback(err);
+      logger.error(`charge request failed: ${err}`);
+      const { createServiceError } = require('./error_helper');
+      callback(createServiceError(
+        grpc.status.INVALID_ARGUMENT,
+        err.errorCode || 'PAYMENT_FAILED',
+        err.message,
+        'paymentservice'
+      ));
     }
   }
 

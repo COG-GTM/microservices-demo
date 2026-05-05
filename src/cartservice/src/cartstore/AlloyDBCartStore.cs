@@ -19,6 +19,7 @@ using Microsoft.Extensions.Configuration;
 using System.Threading.Tasks;
 using Google.Api.Gax.ResourceNames;
 using Google.Cloud.SecretManager.V1;
+using cartservice.errors;
  
 namespace cartservice.cartstore
 {
@@ -95,8 +96,7 @@ namespace cartservice.cartstore
         }
         catch (Exception ex)
         {   
-            throw new RpcException(
-                new Status(StatusCode.FailedPrecondition, $"Unable to access cart storage due to an internal error. {ex}"));
+            throw ServiceErrorHelper.Create(StatusCode.Unavailable, "CART_STORAGE_UNAVAILABLE", $"Unable to access cart storage due to an internal error. {ex}");
         }
     }
 
@@ -131,8 +131,7 @@ namespace cartservice.cartstore
             }
             catch (Exception ex)
             {
-                throw new RpcException(
-                    new Status(StatusCode.FailedPrecondition, $"Unable to access cart storage due to an internal error. {ex}"));
+                throw ServiceErrorHelper.Create(StatusCode.Unavailable, "CART_STORAGE_UNAVAILABLE", $"Unable to access cart storage due to an internal error. {ex}");
             }
             return cart;
         }
@@ -156,8 +155,7 @@ namespace cartservice.cartstore
             }
             catch (Exception ex)
             {
-                throw new RpcException(
-                    new Status(StatusCode.FailedPrecondition, $"Unable to access cart storage due to an internal error. {ex}"));
+                throw ServiceErrorHelper.Create(StatusCode.Unavailable, "CART_STORAGE_UNAVAILABLE", $"Unable to access cart storage due to an internal error. {ex}");
             }
         }
 

@@ -35,6 +35,8 @@ import (
 	pb "github.com/GoogleCloudPlatform/microservices-demo/src/frontend/genproto"
 	"github.com/GoogleCloudPlatform/microservices-demo/src/frontend/money"
 	"github.com/GoogleCloudPlatform/microservices-demo/src/frontend/validator"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
 type platformDetails struct {
@@ -533,9 +535,47 @@ func (fe *frontendServer) chooseAd(ctx context.Context, ctxKeys []string, log lo
 	return ads[rand.Intn(len(ads))]
 }
 
+func extractServiceError(err error) (codes.Code, string, string) {
+	st, ok := status.FromError(err)
+	if !ok {
+		return codes.Unknown, "UNKNOWN", err.Error()
+	}
+	for _, detail := range st.Details() {
+		if svcErr, ok := detail.(*pb.ServiceError); ok {
+			return st.Code(), svcErr.ErrorCode, svcErr.Message
+		}
+	}
+	return st.Code(), st.Code().String(), st.Message()
+}
+
+func grpcCodeToHTTP(code codes.Code) int {
+	switch code {
+	case codes.NotFound:
+		return http.StatusNotFound
+	case codes.InvalidArgument:
+		return http.StatusBadRequest
+	case codes.FailedPrecondition:
+		return http.StatusBadRequest
+	case codes.Unavailable:
+		return http.StatusServiceUnavailable
+	case codes.Internal:
+		return http.StatusInternalServerError
+	default:
+		return http.StatusInternalServerError
+	}
+}
+
 func renderHTTPError(log logrus.FieldLogger, r *http.Request, w http.ResponseWriter, err error, code int) {
 	log.WithField("error", err).Error("request error")
 	errMsg := fmt.Sprintf("%+v", err)
+	errorCode := ""
+
+	grpcCode, svcErrCode, svcErrMsg := extractServiceError(err)
+	if svcErrCode != "" && svcErrCode != "UNKNOWN" && svcErrCode != grpcCode.String() {
+		errorCode = svcErrCode
+		errMsg = svcErrMsg
+		code = grpcCodeToHTTP(grpcCode)
+	}
 
 	w.WriteHeader(code)
 
@@ -543,6 +583,7 @@ func renderHTTPError(log logrus.FieldLogger, r *http.Request, w http.ResponseWri
 		"error":       errMsg,
 		"status_code": code,
 		"status":      http.StatusText(code),
+		"error_code":  errorCode,
 	})); templateErr != nil {
 		log.Println(templateErr)
 	}

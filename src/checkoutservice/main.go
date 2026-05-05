@@ -31,6 +31,8 @@ import (
 	"google.golang.org/grpc/health"
 	"google.golang.org/grpc/status"
 
+	svcerrors "github.com/GoogleCloudPlatform/microservices-demo/src/checkoutservice/errors"
+
 	pb "github.com/GoogleCloudPlatform/microservices-demo/src/checkoutservice/genproto"
 	money "github.com/GoogleCloudPlatform/microservices-demo/src/checkoutservice/money"
 	healthpb "google.golang.org/grpc/health/grpc_health_v1"
@@ -232,12 +234,12 @@ func (cs *checkoutService) PlaceOrder(ctx context.Context, req *pb.PlaceOrderReq
 
 	orderID, err := uuid.NewUUID()
 	if err != nil {
-		return nil, status.Errorf(codes.Internal, "failed to generate order uuid")
+		return nil, svcerrors.NewServiceError(codes.Internal, "ORDER_UUID_GENERATION_FAILED", "failed to generate order uuid", "checkoutservice")
 	}
 
 	prep, err := cs.prepareOrderItemsAndShippingQuoteFromCart(ctx, req.UserId, req.UserCurrency, req.Address)
 	if err != nil {
-		return nil, status.Errorf(codes.Internal, err.Error())
+		return nil, svcerrors.NewServiceError(codes.Internal, "ORDER_PREPARATION_FAILED", err.Error(), "checkoutservice")
 	}
 
 	total := pb.Money{CurrencyCode: req.UserCurrency,
@@ -251,13 +253,13 @@ func (cs *checkoutService) PlaceOrder(ctx context.Context, req *pb.PlaceOrderReq
 
 	txID, err := cs.chargeCard(ctx, &total, req.CreditCard)
 	if err != nil {
-		return nil, status.Errorf(codes.Internal, "failed to charge card: %+v", err)
+		return nil, svcerrors.NewServiceError(codes.Internal, "CARD_CHARGE_FAILED", fmt.Sprintf("failed to charge card: %+v", err), "checkoutservice")
 	}
 	log.Infof("payment went through (transaction_id: %s)", txID)
 
 	shippingTrackingID, err := cs.shipOrder(ctx, req.Address, prep.cartItems)
 	if err != nil {
-		return nil, status.Errorf(codes.Unavailable, "shipping error: %+v", err)
+		return nil, svcerrors.NewServiceError(codes.Unavailable, "SHIPPING_UNAVAILABLE", fmt.Sprintf("shipping error: %+v", err), "checkoutservice")
 	}
 
 	_ = cs.emptyUserCart(ctx, req.UserId)
