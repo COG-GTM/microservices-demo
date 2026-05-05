@@ -25,6 +25,9 @@ import hipstershop.Demo.AdResponse;
 import io.grpc.Server;
 import io.grpc.ServerBuilder;
 import io.grpc.StatusRuntimeException;
+import com.google.rpc.Code;
+import io.grpc.protobuf.StatusProto;
+import com.google.protobuf.Any;
 import io.grpc.health.v1.HealthCheckResponse.ServingStatus;
 import io.grpc.services.*;
 import io.grpc.stub.StreamObserver;
@@ -113,7 +116,8 @@ public final class AdService {
         responseObserver.onCompleted();
       } catch (StatusRuntimeException e) {
         logger.log(Level.WARN, "GetAds Failed with status {}", e.getStatus());
-        responseObserver.onError(e);
+        responseObserver.onError(
+            createServiceError(Code.INTERNAL, "AD_RETRIEVAL_FAILED", "GetAds failed: " + e.getMessage()));
       }
     }
   }
@@ -217,6 +221,23 @@ public final class AdService {
     // TODO(arbrown) Implement OpenTelemetry tracing
     
     logger.info("Tracing enabled - Stackdriver exporter initialized.");
+  }
+
+  private static StatusRuntimeException createServiceError(
+      Code code, String errorCode, String message) {
+    Demo.ServiceError detail =
+        Demo.ServiceError.newBuilder()
+            .setErrorCode(errorCode)
+            .setMessage(message)
+            .setService("adservice")
+            .build();
+    com.google.rpc.Status status =
+        com.google.rpc.Status.newBuilder()
+            .setCode(code.getNumber())
+            .setMessage(message)
+            .addDetails(Any.pack(detail))
+            .build();
+    return StatusProto.toStatusRuntimeException(status);
   }
 
   /** Main launches the server from the command line. */
