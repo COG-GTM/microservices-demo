@@ -22,6 +22,10 @@ import hipstershop.Demo.AdResponse;
 import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
 import io.grpc.StatusRuntimeException;
+import io.grpc.protobuf.StatusProto;
+import com.google.rpc.Status;
+import com.google.protobuf.Any;
+import com.google.protobuf.InvalidProtocolBufferException;
 import java.util.concurrent.TimeUnit;
 import javax.annotation.Nullable;
 import org.apache.logging.log4j.Level;
@@ -65,9 +69,23 @@ public class AdServiceClient {
     try {
       response = blockingStub.getAds(request);
     } catch (StatusRuntimeException e) {
-      logger.log(Level.WARN, "RPC failed: " + e.getStatus());
+      logger.log(Level.WARN, "RPC failed: {}", e.getStatus());
+      Status status = StatusProto.fromThrowable(e);
+      if (status != null) {
+          for (Any detail : status.getDetailsList()) {
+              if (detail.is(Demo.ServiceError.class)) {
+                  try {
+                      Demo.ServiceError svcErr = detail.unpack(Demo.ServiceError.class);
+                      logger.log(Level.WARN, "Service error: code={}, service={}, message={}",
+                          svcErr.getErrorCode(), svcErr.getService(), svcErr.getMessage());
+                  } catch (InvalidProtocolBufferException ex) {
+                      logger.log(Level.WARN, "Failed to unpack ServiceError detail");
+                  }
+              }
+          }
+      }
       return;
-    } 
+    }
     for (Ad ads : response.getAdsList()) {
       logger.info("Ads: " + ads.getText());
     }
