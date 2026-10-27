@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: thd-hackathon-starter
+  labels:
+    app.kubernetes.io/name: thd-hackathon-starter
+    app.kubernetes.io/instance: thd-hackathon-starter-dev
+    app.kubernetes.io/component: web
+    app.kubernetes.io/part-of: app-migration-wave
+    app.kubernetes.io/managed-by: platform-dev
+data:
+  NODE_ENV: production
+  PORT: "8080"
+  MONGO_DATABASE: my_database
+  MONGO_OPTIONS: authSource=admin&tls=true

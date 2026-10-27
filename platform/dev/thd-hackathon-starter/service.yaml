@@ -1,0 +1,19 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: thd-hackathon-starter
+  labels:
+    app.kubernetes.io/name: thd-hackathon-starter
+    app.kubernetes.io/instance: thd-hackathon-starter-dev
+    app.kubernetes.io/component: web
+    app.kubernetes.io/part-of: app-migration-wave
+    app.kubernetes.io/managed-by: platform-dev
+spec:
+  type: ClusterIP
+  selector:
+    app.kubernetes.io/name: thd-hackathon-starter
+    app.kubernetes.io/instance: thd-hackathon-starter-dev
+  ports:
+    - name: http
+      port: 80
+      targetPort: http
