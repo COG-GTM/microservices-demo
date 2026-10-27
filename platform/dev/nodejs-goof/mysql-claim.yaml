@@ -1,0 +1,20 @@
+# Crossplane claim: MySQL 5.7 (the app's mysql 2.18 driver does not support caching_sha2_password).
+apiVersion: database.example.org/v1alpha1
+kind: MySQLInstance
+metadata:
+  name: nodejs-goof-mysql
+  labels:
+    app.kubernetes.io/name: nodejs-goof
+    app.kubernetes.io/instance: nodejs-goof-dev
+    app.kubernetes.io/part-of: app-migration-wave
+    app.kubernetes.io/managed-by: platform-gitops
+spec:
+  parameters:
+    engineVersion: "5.7"
+    storageGB: 10
+  compositionSelector:
+    matchLabels:
+      provider: aws
+      engine: mysql
+  writeConnectionSecretToRef:
+    name: nodejs-goof-mysql-claim-conn

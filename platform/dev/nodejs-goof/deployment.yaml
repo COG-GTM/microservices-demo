@@ -1,0 +1,119 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nodejs-goof
+  labels:
+    app.kubernetes.io/name: nodejs-goof
+    app.kubernetes.io/instance: nodejs-goof-dev
+    app.kubernetes.io/part-of: app-migration-wave
+    app.kubernetes.io/managed-by: platform-gitops
+    app.kubernetes.io/component: web
+    app.kubernetes.io/version: wave-20261027-1152
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: nodejs-goof
+      app.kubernetes.io/instance: nodejs-goof-dev
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: nodejs-goof
+        app.kubernetes.io/instance: nodejs-goof-dev
+        app.kubernetes.io/part-of: app-migration-wave
+        app.kubernetes.io/managed-by: platform-gitops
+        app.kubernetes.io/component: web
+    spec:
+      automountServiceAccountToken: false
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        runAsGroup: 1000
+        fsGroup: 1000
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: app
+          image: localhost:5000/nodejs-goof@sha256:fef8615aeca593de37ede1fff77d08d844f94bc360ef71a447d519bf3b6a0395
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: http
+              containerPort: 3001
+          envFrom:
+            - configMapRef:
+                name: nodejs-goof-config
+          env:
+            - name: MONGO_HOST
+              valueFrom:
+                secretKeyRef:
+                  name: nodejs-goof-mongodb-conn
+                  key: endpoint
+            - name: MONGO_PORT
+              valueFrom:
+                secretKeyRef:
+                  name: nodejs-goof-mongodb-conn
+                  key: port
+            - name: MONGO_USER
+              valueFrom:
+                secretKeyRef:
+                  name: nodejs-goof-mongodb-conn
+                  key: username
+            - name: MONGO_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: nodejs-goof-mongodb-conn
+                  key: password
+            - name: MYSQL_HOST
+              valueFrom:
+                secretKeyRef:
+                  name: nodejs-goof-mysql-conn
+                  key: endpoint
+            - name: MYSQL_PORT
+              valueFrom:
+                secretKeyRef:
+                  name: nodejs-goof-mysql-conn
+                  key: port
+            - name: MYSQL_USER
+              valueFrom:
+                secretKeyRef:
+                  name: nodejs-goof-mysql-conn
+                  key: username
+            - name: MYSQL_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: nodejs-goof-mysql-conn
+                  key: password
+          resources:
+            requests:
+              cpu: 100m
+              memory: 192Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi
+          readinessProbe:
+            httpGet:
+              path: /readyz
+              port: http
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: http
+            initialDelaySeconds: 20
+            periodSeconds: 20
+            failureThreshold: 3
+          securityContext:
+            allowPrivilegeEscalation: false
+            privileged: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop:
+                - ALL
+          volumeMounts:
+            - name: tmp
+              mountPath: /tmp
+      volumes:
+        - name: tmp
+          emptyDir:
+            sizeLimit: 256Mi

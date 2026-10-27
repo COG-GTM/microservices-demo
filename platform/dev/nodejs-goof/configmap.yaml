@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: nodejs-goof-config
+  labels:
+    app.kubernetes.io/name: nodejs-goof
+    app.kubernetes.io/instance: nodejs-goof-dev
+    app.kubernetes.io/part-of: app-migration-wave
+    app.kubernetes.io/managed-by: platform-gitops
+data:
+  PORT: "3001"
+  NODE_ENV: production
+  MONGO_DATABASE: express-todo
+  MONGO_AUTH_SOURCE: admin
+  MYSQL_DATABASE: acme
