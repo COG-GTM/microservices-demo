@@ -15,6 +15,9 @@ spec:
   # One replica matches today's single process; the status poller has not
   # been reviewed for running in several pods.
   replicas: 1
+  # Recreate so an upgrade never runs two pollers at once (short outage on deploy).
+  strategy:
+    type: Recreate
   selector:
     matchLabels:
       app.kubernetes.io/name: realdreamteam
