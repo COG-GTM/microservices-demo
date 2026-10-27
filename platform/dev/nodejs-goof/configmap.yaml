@@ -11,4 +11,5 @@ data:
   PORT: "3001"
   NODE_ENV: production
   MONGO_DATABASE: express-todo
+  MONGO_AUTH_SOURCE: admin
   MYSQL_DATABASE: acme
