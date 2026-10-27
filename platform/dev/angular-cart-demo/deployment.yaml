@@ -58,9 +58,9 @@ spec:
             initialDelaySeconds: 5
             periodSeconds: 10
             failureThreshold: 3
+          # Process-only check: a MongoDB outage fails readiness, not liveness
           livenessProbe:
-            httpGet:
-              path: /healthz
+            tcpSocket:
               port: http
             initialDelaySeconds: 20
             periodSeconds: 20
