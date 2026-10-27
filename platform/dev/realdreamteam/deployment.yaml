@@ -1,0 +1,87 @@
+# realdreamteam: Node 22 auction app (app migration wave, intranet zone).
+# Image is pinned by digest; the build workflow in the app repo produces it.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: realdreamteam
+  labels:
+    app.kubernetes.io/name: realdreamteam
+    app.kubernetes.io/instance: realdreamteam-dev
+    app.kubernetes.io/component: web
+    app.kubernetes.io/part-of: realdreamteam
+    app.kubernetes.io/version: "wave-20261027-1152"
+    app.kubernetes.io/managed-by: platform-dev
+spec:
+  # One replica matches today's single process; the status poller has not
+  # been reviewed for running in several pods.
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: realdreamteam
+      app.kubernetes.io/instance: realdreamteam-dev
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: realdreamteam
+        app.kubernetes.io/instance: realdreamteam-dev
+        app.kubernetes.io/component: web
+        app.kubernetes.io/part-of: realdreamteam
+        app.kubernetes.io/version: "wave-20261027-1152"
+    spec:
+      automountServiceAccountToken: false
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        runAsGroup: 1000
+        fsGroup: 1000
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: app
+          image: localhost:5000/realdreamteam@sha256:97e51f591f608b1287b723c6ae220c0baa3675c60e25bc74168141d3f77c6bb1
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: http
+              containerPort: 3000
+          envFrom:
+            - configMapRef:
+                name: realdreamteam-config
+            - secretRef:
+                name: realdreamteam-secrets
+          readinessProbe:
+            httpGet:
+              path: /healthz
+              port: http
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            timeoutSeconds: 3
+            failureThreshold: 3
+          livenessProbe:
+            # /enter needs no database, so a database outage does not restart the pod.
+            httpGet:
+              path: /enter
+              port: http
+            initialDelaySeconds: 15
+            periodSeconds: 20
+            timeoutSeconds: 3
+            failureThreshold: 3
+          resources:
+            requests:
+              cpu: 100m
+              memory: 128Mi
+            limits:
+              cpu: 500m
+              memory: 256Mi
+          securityContext:
+            allowPrivilegeEscalation: false
+            privileged: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop:
+                - ALL
+          volumeMounts:
+            - name: tmp
+              mountPath: /tmp
+      volumes:
+        - name: tmp
+          emptyDir: {}

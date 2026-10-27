@@ -1,0 +1,24 @@
+# Non-secret settings. The app keeps using its existing Postgres (intranet
+# zone, reachable from the platform); TLS is enabled by the app for any
+# non-localhost host. The connection URL for that existing endpoint is not
+# kept in any repository today, so it comes from the secret store with the
+# password (see secret.yaml) instead of being written here.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: realdreamteam-config
+  labels:
+    app.kubernetes.io/name: realdreamteam
+    app.kubernetes.io/instance: realdreamteam-dev
+    app.kubernetes.io/part-of: realdreamteam
+data:
+  NODE_ENV: "production"
+  PORT: "3000"
+  POLL_SECONDS: "5"
+  SIM_ENABLED: "true"
+  SIM_MIN_SECONDS: "5"
+  SIM_MAX_SECONDS: "30"
+  SIM_IDLE_SECONDS: "90"
+  SIM_IDLE_CHECK_SECONDS: "30"
+  SIM_MIN_OPEN_AUCTIONS: "3"
+  SIM_MIN_UPCOMING_AUCTIONS: "1"
