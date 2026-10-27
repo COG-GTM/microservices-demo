@@ -1,0 +1,27 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: thd-hackathon-starter
+  labels:
+    app.kubernetes.io/name: thd-hackathon-starter
+    app.kubernetes.io/instance: thd-hackathon-starter-dev
+    app.kubernetes.io/component: web
+    app.kubernetes.io/part-of: app-migration-wave
+    app.kubernetes.io/managed-by: platform-dev
+spec:
+  ingressClassName: nginx
+  tls:
+    - hosts:
+        - thd-hackathon-starter.dev.example.com
+      secretName: thd-hackathon-starter-tls
+  rules:
+    - host: thd-hackathon-starter.dev.example.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: thd-hackathon-starter
+                port:
+                  name: http

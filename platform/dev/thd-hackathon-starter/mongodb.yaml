@@ -1,0 +1,22 @@
+# Crossplane claim for the app's MongoDB (internet zone: the datastore moves with the app).
+# MongoDBInstance is the MongoDB counterpart of PostgreSQLInstance; its composition
+# writes username, password, endpoint and port to the connection secret below.
+apiVersion: database.example.org/v1alpha1
+kind: MongoDBInstance
+metadata:
+  name: thd-hackathon-starter-mongodb
+  labels:
+    app.kubernetes.io/name: thd-hackathon-starter
+    app.kubernetes.io/instance: thd-hackathon-starter-dev
+    app.kubernetes.io/part-of: app-migration-wave
+    app.kubernetes.io/managed-by: platform-dev
+    app.kubernetes.io/component: database
+spec:
+  parameters:
+    engineVersion: "7.0"
+    storageGB: 20
+  compositionSelector:
+    matchLabels:
+      provider: aws
+  writeConnectionSecretToRef:
+    name: thd-hackathon-starter-mongodb
