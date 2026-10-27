@@ -1,0 +1,23 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: angular-cart-demo
+  labels:
+    app.kubernetes.io/name: angular-cart-demo
+    app.kubernetes.io/instance: angular-cart-demo-dev
+    app.kubernetes.io/component: web
+    app.kubernetes.io/part-of: app-migration-wave
+    app.kubernetes.io/managed-by: platform-gitops
+spec:
+  ingressClassName: internal
+  rules:
+    - host: angular-cart-demo.dev.internal
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: angular-cart-demo
+                port:
+                  name: http
