@@ -1,0 +1,26 @@
+# Intranet zone: served by the cluster's default ingress class. TLS terminates
+# here; the platform issues the certificate into Secret realdreamteam-tls.
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: realdreamteam
+  labels:
+    app.kubernetes.io/name: realdreamteam
+    app.kubernetes.io/instance: realdreamteam-dev
+    app.kubernetes.io/part-of: realdreamteam
+spec:
+  tls:
+    - hosts:
+        - realdreamteam.dev.internal
+      secretName: realdreamteam-tls
+  rules:
+    - host: realdreamteam.dev.internal
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: realdreamteam
+                port:
+                  name: http
