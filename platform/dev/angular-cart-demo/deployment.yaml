@@ -30,7 +30,7 @@ spec:
         fsGroup: 1000
       containers:
         - name: web
-          image: localhost:5000/angular-cart-demo@sha256:a4dda2085711f8e9283c5f92318086cd6815f11c193264fbdd95e6101ba7adaf
+          image: localhost:5000/angular-cart-demo@sha256:f55093ce753931907e5ec17792a751b990a254166d0b67a3fd0078a18d48011c
           imagePullPolicy: IfNotPresent
           securityContext:
             allowPrivilegeEscalation: false
