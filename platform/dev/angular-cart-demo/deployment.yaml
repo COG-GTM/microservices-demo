@@ -1,0 +1,80 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: angular-cart-demo
+  labels:
+    app.kubernetes.io/name: angular-cart-demo
+    app.kubernetes.io/instance: angular-cart-demo-dev
+    app.kubernetes.io/component: web
+    app.kubernetes.io/part-of: app-migration-wave
+    app.kubernetes.io/managed-by: platform-gitops
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: angular-cart-demo
+      app.kubernetes.io/instance: angular-cart-demo-dev
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: angular-cart-demo
+        app.kubernetes.io/instance: angular-cart-demo-dev
+        app.kubernetes.io/component: web
+        app.kubernetes.io/part-of: app-migration-wave
+        app.kubernetes.io/managed-by: platform-gitops
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        runAsGroup: 1000
+        fsGroup: 1000
+      containers:
+        - name: web
+          image: localhost:5000/angular-cart-demo@sha256:f55093ce753931907e5ec17792a751b990a254166d0b67a3fd0078a18d48011c
+          imagePullPolicy: IfNotPresent
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+            privileged: false
+            readOnlyRootFilesystem: true
+          ports:
+            - name: http
+              containerPort: 8080
+          envFrom:
+            - configMapRef:
+                name: angular-cart-demo-config
+          env:
+            - name: SESSION_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: angular-cart-demo-secrets
+                  key: SESSION_SECRET
+          readinessProbe:
+            httpGet:
+              path: /healthz
+              port: http
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            failureThreshold: 3
+          # Process-only check: a MongoDB outage fails readiness, not liveness
+          livenessProbe:
+            tcpSocket:
+              port: http
+            initialDelaySeconds: 20
+            periodSeconds: 20
+            failureThreshold: 3
+          resources:
+            requests:
+              cpu: 100m
+              memory: 128Mi
+            limits:
+              cpu: 500m
+              memory: 256Mi
+          volumeMounts:
+            - name: tmp
+              mountPath: /tmp
+      volumes:
+        - name: tmp
+          emptyDir: {}

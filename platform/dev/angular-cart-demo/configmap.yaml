@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: angular-cart-demo-config
+  labels:
+    app.kubernetes.io/name: angular-cart-demo
+    app.kubernetes.io/instance: angular-cart-demo-dev
+    app.kubernetes.io/component: web
+    app.kubernetes.io/part-of: app-migration-wave
+    app.kubernetes.io/managed-by: platform-gitops
+data:
+  NODE_ENV: production
+  PORT: "8080"
+  # Existing intranet MongoDB endpoint (datastore stays where it is; no credentials here)
+  MONGODB_URI: mongodb://mongodb.intranet.internal:27017/angularclothesshop
+  seedDB: "false"
