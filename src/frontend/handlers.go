@@ -26,6 +26,7 @@ import (
 	"os"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/gorilla/mux"
@@ -80,13 +81,23 @@ func (fe *frontendServer) homeHandler(w http.ResponseWriter, r *http.Request) {
 		Price *pb.Money
 	}
 	ps := make([]productView, len(products))
+	convErrs := make([]error, len(products))
+	currency := currentCurrency(r)
+	var wg sync.WaitGroup
 	for i, p := range products {
-		price, err := fe.convertCurrency(r.Context(), p.GetPriceUsd(), currentCurrency(r))
+		wg.Add(1)
+		go func(i int, p *pb.Product) {
+			defer wg.Done()
+			price, err := fe.convertCurrency(r.Context(), p.GetPriceUsd(), currency)
+			ps[i], convErrs[i] = productView{p, price}, err
+		}(i, p)
+	}
+	wg.Wait()
+	for i, err := range convErrs {
 		if err != nil {
-			renderHTTPError(log, r, w, errors.Wrapf(err, "failed to do currency conversion for product %s", p.GetId()), http.StatusInternalServerError)
+			renderHTTPError(log, r, w, errors.Wrapf(err, "failed to do currency conversion for product %s", products[i].GetId()), http.StatusInternalServerError)
 			return
 		}
-		ps[i] = productView{p, price}
 	}
 
 	// Set ENV_PLATFORM (default to local if not set; use env var if set; otherwise detect GCP, which overrides env)_
